@@ -18,39 +18,76 @@ export function dateFields(iso) {
 const withDates = (e) => ({ ...e, ...dateFields(e.eventDate) });
 
 const eventFromRow = (r) => withDates({
-  id: r.id, title: r.title, description: r.description || "", eventDate: r.event_date,
+  id: r.id, slug: r.slug, title: r.title, description: r.description || "", eventDate: r.event_date,
   open: r.open_time || "", start: r.start_time || "", venue: r.venue || "", address: r.address || "",
   mapUrl: r.map_url || "", ticket: r.ticket || "", flyer: r.flyer_url || "", notes: r.notes || [],
-  email: r.contact_email || "", theme: { color: r.theme_color || "dusk", font: r.theme_font || "mincho" },
+  email: r.contact_email || "", published: Boolean(r.published),
+  theme: { color: r.theme_color || "dusk", font: r.theme_font || "mincho" },
 });
 const bandFromRow = (b, i) => ({
   id: b.id, name: b.name, description: b.description || "", image: b.image_url || "",
   youtubeUrl: b.youtube_url || "", links: b.links || [], tone: (205 + i * 47) % 360,
 });
 
-// 一番新しい日付のイベントを1件取得(公開側はRLSにより公開済みのみ見える)
-export async function fetchEvent() {
-  const sample = {
-    event: withDates({ ...sampleEvent, id: null }),
-    bands: sampleBands.map((b) => ({ ...b, links: b.links || [], youtubeUrl: b.youtubeUrl || "" })),
-  };
-  if (!supabase) return { source: "sample", ...sample };
-  const { data, error } = await supabase
-    .from("events").select("*, bands(*)").order("event_date", { ascending: false }).limit(1);
+const SAMPLE_ID = "sample";
+const sampleData = () => ({
+  event: withDates({ ...sampleEvent, id: SAMPLE_ID, published: true }),
+  bands: sampleBands.map((b) => ({ ...b, image: b.image || "", links: b.links || [], youtubeUrl: b.youtubeUrl || "" })),
+});
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// 公開側：公開中のイベント一覧(開催日の昇順)。Supabase未設定ならサンプル1件
+export async function fetchPublishedEvents() {
+  if (!supabase) return [sampleData().event];
+  const { data, error } = await supabase.from("events").select("*").eq("published", true).order("event_date", { ascending: true });
   if (error) throw error;
-  if (!data.length) return { source: "empty", ...sample };
-  const row = data[0];
-  const bands = [...(row.bands || [])].sort((a, b) => a.position - b.position).map(bandFromRow);
-  return { source: "db", event: eventFromRow(row), bands };
+  return data.map(eventFromRow);
 }
 
+// 管理側：すべてのイベント(非公開を含む)、新しい日付が上
+export async function fetchAdminEvents() {
+  const { data, error } = await supabase.from("events").select("*").order("event_date", { ascending: false });
+  if (error) throw error;
+  return data.map(eventFromRow);
+}
+
+// 1イベントと、そのイベントの出演者。key は id(uuid) か slug。見つからなければ null
+export async function fetchEventDetail(key, { admin = false } = {}) {
+  if (!supabase) return key === SAMPLE_ID ? sampleData() : null;
+  let q = supabase.from("events").select("*, bands(*)").eq(UUID.test(key) ? "id" : "slug", key);
+  if (!admin) q = q.eq("published", true);
+  const { data, error } = await q.limit(1);
+  if (error) throw error;
+  if (!data.length) return null;
+  const bands = [...(data[0].bands || [])].sort((a, b) => a.position - b.position).map(bandFromRow);
+  return { event: eventFromRow(data[0]), bands };
+}
+
+// 新規イベントの初期値。DBが空のときだけサンプルを初期値にする。それ以外は直近イベントのメール・色・フォントを引き継ぐ
+export async function newEventDraft() {
+  const list = await fetchAdminEvents();
+  if (!list.length) {
+    const s = sampleData();
+    return { event: { ...s.event, id: null, published: false }, bands: s.bands, prefilled: true };
+  }
+  const prev = list[0];
+  return {
+    event: withDates({
+      id: null, title: "", description: "", eventDate: "", open: "", start: "", venue: "", address: "",
+      mapUrl: "", ticket: "", flyer: "", notes: [], email: prev.email, theme: prev.theme, published: false,
+    }),
+    bands: [],
+  };
+}
+
+// 保存。id があればそのイベントだけ更新、なければ新規レコードとして追加(他のイベントには触れない)
 export async function saveEvent(ev, bands) {
   const row = {
     title: ev.title.trim(), description: ev.description, event_date: ev.eventDate,
     open_time: ev.open, start_time: ev.start, venue: ev.venue, address: ev.address,
     map_url: ev.mapUrl, ticket: ev.ticket, flyer_url: ev.flyer || null,
     notes: ev.notes.map((n) => n.trim()).filter(Boolean), contact_email: ev.email,
-    theme_color: ev.theme.color, theme_font: ev.theme.font, published: true,
+    theme_color: ev.theme.color, theme_font: ev.theme.font, published: Boolean(ev.published),
   };
   let id = ev.id;
   if (id) {
@@ -71,10 +108,12 @@ export async function saveEvent(ev, bands) {
     const { error } = await supabase.from("bands").upsert(rows);
     if (error) throw error;
   }
+  // 削除は「このイベントの出演者のうち、フォームから外したもの」だけ
   let del = supabase.from("bands").delete().eq("event_id", id);
   if (rows.length) del = del.not("id", "in", `(${rows.map((r) => r.id).join(",")})`);
   const { error: e3 } = await del;
   if (e3) throw e3;
+  return id;
 }
 
 // iPhoneの大きな写真を縮小してから Storage に保存し、公開URLを返す

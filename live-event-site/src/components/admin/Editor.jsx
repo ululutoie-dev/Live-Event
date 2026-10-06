@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { fetchEvent, saveEvent } from "../../lib/api";
+import { fetchEventDetail, newEventDraft, saveEvent } from "../../lib/api";
 import { COLORS, FONTS } from "../../theme";
 import { Field, ImageField } from "./fields";
 import BandEditor from "./BandEditor";
 
 const blankBand = () => ({ id: null, name: "", description: "", image: "", youtubeUrl: "", links: [], tone: 205 });
 
-export default function Editor({ onLogout }) {
+export default function Editor({ eventId, flash, onLogout, onSaved }) {
   const [ev, setEv] = useState(null);
   const [bands, setBands] = useState([]);
   const [msg, setMsg] = useState("");
@@ -14,13 +14,25 @@ export default function Editor({ onLogout }) {
 
   const load = async (note) => {
     try {
-      const r = await fetchEvent();
+      if (!eventId) {
+        const r = await newEventDraft();
+        setEv(r.event); setBands(r.bands);
+        setMsg(r.prefilled ? "まだ保存されたイベントがありません。サンプルを初期値に表示しています。" : "新しいイベントです。保存するまで追加されません(初期は非公開)。");
+        return;
+      }
+      const r = await fetchEventDetail(eventId, { admin: true });
+      if (!r) return setMsg("このイベントが見つかりません。");
       setEv(r.event); setBands(r.bands);
-      setMsg(note || (r.source === "db" ? "" : "まだ保存されたデータがありません。サンプルを初期値に表示しています。保存すると公開されます。"));
+      setMsg(note || "");
     } catch (e) { setMsg("読み込みに失敗しました: " + e.message); }
   };
-  useEffect(() => { load(); }, []);
-  if (!ev) return <p>{msg || "読み込み中…"}</p>;
+  useEffect(() => { load(flash); }, [eventId]);
+  if (!ev) return (
+    <>
+      <p>{msg || "読み込み中…"}</p>
+      <a className="adm-link" href="#/admin">← イベント一覧へ戻る</a>
+    </>
+  );
 
   const set = (k) => (e) => setEv({ ...ev, [k]: e.target.value });
   const setTheme = (k) => (e) => setEv({ ...ev, theme: { ...ev.theme, [k]: e.target.value } });
@@ -34,7 +46,11 @@ export default function Editor({ onLogout }) {
     if (!ev.title.trim() || !ev.eventDate) return setMsg("タイトルと日付は必須です。");
     if (bands.some((b) => !b.name.trim())) return setMsg("バンド名が空の出演者がいます。");
     setBusy(true); setMsg("保存中…");
-    try { await saveEvent(ev, bands); await load("保存しました。公開ページに反映されています。"); }
+    try {
+      const id = await saveEvent(ev, bands);
+      if (!ev.id) { setBusy(false); return onSaved(id); }
+      await load(ev.published ? "保存しました。公開ページに反映されています。" : "保存しました(非公開のため公開ページには表示されません)。");
+    }
     catch (e) { setMsg("保存に失敗しました: " + e.message); }
     setBusy(false);
   };
@@ -42,10 +58,16 @@ export default function Editor({ onLogout }) {
   return (
     <>
       <div className="adm-top">
-        <a className="adm-link" href="#/">公開ページを見る</a>
+        <a className="btn sm ghost" href="#/admin">← イベント一覧へ戻る</a>
         <button type="button" className="btn sm ghost" onClick={onLogout}>ログアウト</button>
       </div>
-      <h1>イベントを編集</h1>
+      <h1>{ev.id ? "イベントを編集" : "新しいイベント"}</h1>
+      <Field label="公開設定">
+        <select className="in" value={ev.published ? "1" : "0"} onChange={(e) => setEv({ ...ev, published: e.target.value === "1" })}>
+          <option value="1">公開(一般の人に表示)</option>
+          <option value="0">非公開(管理画面にだけ残す)</option>
+        </select>
+      </Field>
 
       <h2>イベント情報</h2>
       <Field label="イベントタイトル"><input className="in" value={ev.title} onChange={set("title")} /></Field>
@@ -85,7 +107,7 @@ export default function Editor({ onLogout }) {
       <div className="savebar">
         <div className="inner">
           <p>{msg}</p>
-          <button type="button" className="btn" onClick={save} disabled={busy}>保存して公開</button>
+          <button type="button" className="btn" onClick={save} disabled={busy}>{ev.published ? "保存して公開" : "保存(非公開)"}</button>
         </div>
       </div>
     </>

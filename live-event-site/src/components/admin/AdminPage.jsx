@@ -3,9 +3,14 @@ import { supabase } from "../../lib/supabase";
 import { applyTheme } from "../../theme";
 import Login from "./Login";
 import Editor from "./Editor";
+import AdminEventList from "./AdminEventList";
 
-export default function AdminPage() {
+//   #/admin            : イベント一覧
+//   #/admin/new        : 新規イベント
+//   #/admin/edit/<id>  : そのイベントの編集
+export default function AdminPage({ hash }) {
   const [session, setSession] = useState(undefined);
+  const [flash, setFlash] = useState("");
   useEffect(() => applyTheme("dusk", "gothic"), []);
   useEffect(() => {
     if (!supabase) return setSession(null);
@@ -23,5 +28,17 @@ export default function AdminPage() {
     );
   }
   if (session === undefined) return null;
-  return <div className="adm">{session ? <Editor onLogout={() => supabase.auth.signOut()} /> : <Login />}</div>;
+  if (!session) return <div className="adm"><Login /></div>;
+
+  const logout = () => supabase.auth.signOut();
+  const edit = hash.match(/^#\/admin\/edit\/([^/?]+)/);
+  const isNew = hash.startsWith("#/admin/new");
+  const onSaved = (id) => { setFlash("イベントを作成しました。"); window.location.hash = `#/admin/edit/${id}`; };
+  return (
+    <div className="adm">
+      {edit ? <Editor key={edit[1]} eventId={edit[1]} flash={flash} onLogout={logout} onSaved={onSaved} />
+        : isNew ? <Editor key="new" eventId={null} onLogout={logout} onSaved={onSaved} />
+        : <AdminEventList onLogout={logout} />}
+    </div>
+  );
 }

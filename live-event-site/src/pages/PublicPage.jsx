@@ -1,43 +1,22 @@
 import { useEffect, useState } from "react";
-import { fetchEvent } from "../lib/api";
-import { applyTheme, SAMPLE_FLYER } from "../theme";
-import Hero from "../components/Hero";
-import Lineup from "../components/Lineup";
-import EventInfo from "../components/EventInfo";
-import ContactButton from "../components/ContactButton";
-import ThemePicker from "../components/ThemePicker";
+import { fetchPublishedEvents } from "../lib/api";
+import EventPage from "./EventPage";
+import EventListPage from "./EventListPage";
 
-// URLの末尾に ?design を付けると、色・フォントを試せるボタンが出ます(一般公開時は出ません)
-const showPicker = new URLSearchParams(window.location.search).has("design");
+// 公開側のルーティング
+//   #/event/<id または slug> : そのイベントの詳細ページ
+//   #/ (トップ)              : 公開中が2件以上なら一覧、1件ならそのイベントの詳細(今までのURLのまま見られます)
+export default function PublicPage({ hash }) {
+  const [list, setList] = useState(null);
+  useEffect(() => { fetchPublishedEvents().then(setList).catch(() => setList("error")); }, []);
 
-export default function PublicPage() {
-  const [data, setData] = useState(null);
-  const [failed, setFailed] = useState(false);
-  const [color, setColor] = useState(null);
-  const [font, setFont] = useState(null);
-  const [flyerOn, setFlyerOn] = useState(null);
-
-  useEffect(() => { fetchEvent().then(setData).catch(() => setFailed(true)); }, []);
-  const ev = data?.event;
-  const c = color || ev?.theme.color || "dusk";
-  const f = font || ev?.theme.font || "mincho";
-  useEffect(() => applyTheme(c, f), [c, f]);
-  useEffect(() => { if (ev) document.title = ev.title; }, [ev]);
-
-  if (!ev) return <p className="loading">{failed ? "読み込めませんでした。時間をおいて開き直してください。" : ""}</p>;
-  const on = flyerOn ?? Boolean(ev.flyer);
-  const flyer = showPicker ? (on ? ev.flyer || SAMPLE_FLYER : "") : ev.flyer;
-  return (
-    <main className="page">
-      <Hero event={ev} flyer={flyer} />
-      <Lineup bands={data.bands} />
-      <EventInfo event={ev} />
-      <ContactButton title={ev.title} email={ev.email} />
-      <div className="footer">
-        {ev.title}
-        <a className="edit-link" href="#/admin">編集</a>
-      </div>
-      {showPicker && <ThemePicker {...{ color: c, setColor, font: f, setFont, flyerOn: on, setFlyerOn }} />}
-    </main>
-  );
+  const m = hash.match(/^#\/event\/([^/?]+)/);
+  if (m) {
+    return <EventPage key={m[1]} idOrSlug={decodeURIComponent(m[1])} multiple={Array.isArray(list) && list.length > 1} />;
+  }
+  if (list === null) return <p className="loading"></p>;
+  if (list === "error") return <p className="loading">読み込めませんでした。時間をおいて開き直してください。</p>;
+  if (list.length === 0) return <p className="loading">現在公開中のイベントはありません。</p>;
+  if (list.length === 1) return <EventPage key={list[0].id} idOrSlug={list[0].id} multiple={false} />;
+  return <EventListPage events={list} />;
 }
