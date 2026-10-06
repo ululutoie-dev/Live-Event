@@ -1,7 +1,8 @@
 /* ===== データ：ここを書き換えるだけで内容が変わります ===== */
 export const event = {
   title: "Night Signals Vol.3",
-  subtitle: "三組の音が重なる、秋の夜",
+  description: "三組の音が重なる、秋の夜",
+  eventDate: "2026-11-22", // 管理画面の日付。表示用の「11.22」などは自動で作られます
   dateLabel: "11.22",
   weekday: "SAT 2026",
   date: "2026年11月22日(土)",

@@ -14,7 +14,7 @@ export default function Hero({ event, flyer }) {
         <div className="hero-date">{event.dateLabel}<small>{event.weekday}</small></div>
         <h1 className="hero-title">{event.title}</h1>
         <p className="hero-meta">
-          <span>{event.subtitle}</span>
+          <span style={{ whiteSpace: "pre-line" }}>{event.description}</span>
           <span>{event.venue}</span>
           <span>OPEN {event.open} / START {event.start}</span>
         </p>

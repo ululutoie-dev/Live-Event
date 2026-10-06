@@ -1,4 +1,5 @@
 export default function ContactButton({ title, email }) {
+  if (!email) return null;
   const href = `mailto:${email}?subject=${encodeURIComponent(title + " 予約・問い合わせ")}`;
   return (
     <section className="cta-wrap pad">

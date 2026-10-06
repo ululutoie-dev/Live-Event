@@ -1,5 +1,20 @@
 # ライブ告知ページ
 
+## 管理画面(ブラウザから編集)のセットアップ
+1. supabase.com で新しいプロジェクトを作る
+2. SQL Editor に `supabase/schema.sql` を貼る。**先に `YOUR-ADMIN-EMAIL` を自分のメールに書き換え**てから Run
+3. Authentication の Users から、そのメールでユーザーを追加(パスワードを設定し、メール確認済みにする)
+4. Authentication の設定で、**新規サインアップ(Allow new users to sign up)をオフ**にする
+5. Project Settings の API で、Project URL と `anon` `public` キーを控える(`service_role` キーは絶対に使わない)
+6. Vercel のプロジェクトの Settings → Environment Variables に次の2つを追加し、再デプロイ
+   - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`
+7. `公開URL/#/admin` を開いてログイン → 編集 → 「保存して公開」
+
+メモ
+- 公開ページの一番下の小さな「編集」リンクからも入れます
+- SNSに貼ったときのプレビュー(OGP)は `index.html` の固定内容です。管理画面で変えても変わりません
+- Supabaseの無料プロジェクトは、長期間アクセスがないと停止することがあります
+
 ## 内容を変える
 - `src/data.js` : イベント情報・出演バンド・メールアドレス・色とフォント(`theme`)
 - 画像は `public/` に入れて `"/flyer.jpg"` のように指定(バンド写真は `public/images/`)
