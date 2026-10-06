@@ -34,7 +34,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--
 .hero.plain .hero-text { padding-top: 0; }
 .hero-date { font-family: var(--serif); font-size: 56px; line-height: 1; font-weight: var(--dl); letter-spacing: .01em; }
 .hero-date small { font-size: 16px; color: var(--muted); margin-left: 10px; letter-spacing: .08em; }
-.hero-title { font-family: var(--serif); font-size: 34px; line-height: 1.3; font-weight: var(--dw); margin: 20px 0 14px; }
+.hero-title { font-family: var(--serif); font-size: 37px; line-height: 1.3; font-weight: var(--dw); margin: 20px 0 14px; }
 .hero-meta { color: var(--muted); font-size: 14px; margin: 0; }
 .hero-meta span { display: block; }
 .lightbox { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.94); overflow: auto; padding: calc(56px + env(safe-area-inset-top, 0px)) 12px calc(32px + env(safe-area-inset-bottom, 0px)); cursor: zoom-out; }
@@ -59,7 +59,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--
 .band { margin-bottom: 64px; }
 .band:last-child { margin-bottom: 0; }
 .band-photo { aspect-ratio: 4 / 3; border-radius: 4px; background-size: cover; background-position: center; margin-bottom: 20px; }
-.band-name { font-family: var(--serif); font-size: 30px; line-height: 1.3; font-weight: var(--dw); margin: 0 0 10px; }
+.band-name { font-family: var(--serif); font-size: 32px; line-height: 1.3; font-weight: var(--dw); margin: 0 0 10px; }
 .band-desc { font-size: 14px; color: var(--sub); margin: 0 0 20px; }
 .video { position: relative; aspect-ratio: 16 / 9; border-radius: 4px; overflow: hidden; background: var(--surface); }
 .video iframe, .video img { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; }
