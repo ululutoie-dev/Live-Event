@@ -5,7 +5,7 @@ const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0
 
 function Item({ e }) {
   return (
-    <a className="ev-item" href={`#/event/${e.id}`}>
+    <a className="ev-item" href={`#/e/${e.slug || e.id}`}>
       <span className="ev-date">{e.dateLabel}<small>{(e.eventDate || "").slice(0, 4)}</small></span>
       <span className="ev-body">
         <b className="ev-title">{e.title}</b>

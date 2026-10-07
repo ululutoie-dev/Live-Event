@@ -4,13 +4,14 @@ import EventPage from "./EventPage";
 import EventListPage from "./EventListPage";
 
 // 公開側のルーティング
-//   #/event/<id または slug> : そのイベントの詳細ページ
+//   #/e/<slug>              : 短い公開URL(例 #/e/vol8)
+//   #/event/<UUID または slug> : 従来のURL。どちらも同じ詳細ページ
 //   #/ (トップ)              : 公開中が2件以上なら一覧、1件ならそのイベントの詳細(今までのURLのまま見られます)
 export default function PublicPage({ hash }) {
   const [list, setList] = useState(null);
   useEffect(() => { fetchPublishedEvents().then(setList).catch(() => setList("error")); }, []);
 
-  const m = hash.match(/^#\/event\/([^/?]+)/);
+  const m = hash.match(/^#\/(?:event|e)\/([^/?]+)/);
   if (m) {
     return <EventPage key={m[1]} idOrSlug={decodeURIComponent(m[1])} multiple={Array.isArray(list) && list.length > 1} />;
   }

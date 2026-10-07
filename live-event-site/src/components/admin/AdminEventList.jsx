@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { fetchAdminEvents } from "../../lib/api";
+import { fetchAdminEvents, eventUrl } from "../../lib/api";
+import QrModal from "./QrModal";
 
 export default function AdminEventList({ onLogout }) {
   const [events, setEvents] = useState(null);
   const [err, setErr] = useState("");
+  const [qr, setQr] = useState(null);
   useEffect(() => {
     fetchAdminEvents().then(setEvents).catch((e) => setErr("読み込みに失敗しました: " + e.message));
   }, []);
   return (
     <>
-      <div className="adm-top">
-        <a className="adm-link" href="#/">公開ページを見る</a>
+      <div className="adm-top" style={{ justifyContent: "flex-end" }}>
         <button type="button" className="btn sm ghost" onClick={onLogout}>ログアウト</button>
       </div>
       <h1>イベント管理</h1>
@@ -27,10 +28,14 @@ export default function AdminEventList({ onLogout }) {
           </div>
           <div className="ev-row-act">
             <a className="btn sm" href={`#/admin/edit/${e.id}`}>編集</a>
-            {e.published && <a className="adm-link" href={`#/event/${e.id}`}>表示</a>}
+            <div className="ev-row-links">
+              {e.published && <a className="adm-link" href={`#/e/${e.slug || e.id}`}>告知ページ</a>}
+              <button type="button" className="adm-link linkbtn" onClick={() => setQr(e)}>QRコード</button>
+            </div>
           </div>
         </div>
       ))}
+      {qr && <QrModal event={qr} url={eventUrl(qr)} onClose={() => setQr(null)} />}
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchEventDetail, newEventDraft, saveEvent } from "../../lib/api";
+import { fetchEventDetail, newEventDraft, saveEvent, slugError, publicBase } from "../../lib/api";
 import { COLORS, FONTS } from "../../theme";
 import { Field, ImageField } from "./fields";
 import BandEditor from "./BandEditor";
@@ -44,6 +44,9 @@ export default function Editor({ eventId, flash, onLogout, onSaved }) {
 
   const save = async () => {
     if (!ev.title.trim() || !ev.eventDate) return setMsg("タイトルと日付は必須です。");
+    const se = slugError((ev.slug || "").trim());
+    if (se) return setMsg(se);
+    if (ev.id && !(ev.slug || "").trim()) return setMsg("公開URL用IDを入力してください。");
     if (bands.some((b) => !b.name.trim())) return setMsg("バンド名が空の出演者がいます。");
     setBusy(true); setMsg("保存中…");
     try {
@@ -71,6 +74,13 @@ export default function Editor({ eventId, flash, onLogout, onSaved }) {
 
       <h2>イベント情報</h2>
       <Field label="イベントタイトル"><input className="in" value={ev.title} onChange={set("title")} /></Field>
+      <Field label="公開URL用ID(半角英小文字・数字・ハイフン)">
+        <input className="in" value={ev.slug || ""} placeholder="例: vol8" autoCapitalize="none" autoCorrect="off" spellCheck="false"
+          onChange={(e) => setEv({ ...ev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })} />
+        <small style={{ display: "block", marginTop: 6, color: "var(--muted)", wordBreak: "break-all" }}>
+          告知ページ: {publicBase()}/#/e/{ev.slug || (ev.id ? "" : "(空欄なら自動で設定)")}
+        </small>
+      </Field>
       <Field label="イベント説明"><textarea className="in" value={ev.description} onChange={set("description")} /></Field>
       <Field label="日付"><input className="in" type="date" value={ev.eventDate || ""} onChange={set("eventDate")} /></Field>
       <div className="grid2">

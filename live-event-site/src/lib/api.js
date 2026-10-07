@@ -54,7 +54,7 @@ export async function fetchAdminEvents() {
 // 1イベントと、そのイベントの出演者。key は id(uuid) か slug。見つからなければ null
 export async function fetchEventDetail(key, { admin = false } = {}) {
   if (!supabase) return key === SAMPLE_ID ? sampleData() : null;
-  let q = supabase.from("events").select("*, bands(*)").eq(UUID.test(key) ? "id" : "slug", key);
+  let q = supabase.from("events").select("*, bands(*)").eq(UUID.test(key) ? "id" : "slug", UUID.test(key) ? key : key.toLowerCase());
   if (!admin) q = q.eq("published", true);
   const { data, error } = await q.limit(1);
   if (error) throw error;
@@ -80,23 +80,40 @@ export async function newEventDraft() {
   };
 }
 
+// slugの重複(DBのunique制約違反)を分かりやすいメッセージにする
+const slugDup = (error) => (error.code === "23505" ? new Error("この公開URL用IDはすでに別のイベントで使われています。別のIDにしてください。") : error);
+
 // 保存。id があればそのイベントだけ更新、なければ新規レコードとして追加(他のイベントには触れない)
+// 公開URL用ID(slug): 半角英小文字・数字・ハイフン、2〜40文字。UUIDと紛らわしい形は不可
+export function slugError(s) {
+  if (!s) return "";
+  if (s.length < 2 || s.length > 40) return "公開URL用IDは2〜40文字で入力してください。";
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s)) return "公開URL用IDは半角の英小文字・数字・ハイフンのみ使えます(例: vol8)。";
+  if (UUID.test(s)) return "このIDは使えません。";
+  return "";
+}
+// 告知ページの公開URL(QRコードにも使用)。VITE_PUBLIC_URL を設定すればドメインを固定できます
+export const publicBase = () => (import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
+export const eventUrl = (e) => `${publicBase()}/#/e/${e.slug || e.id}`;
+
 export async function saveEvent(ev, bands) {
+  const slug = (ev.slug || "").trim();
   const row = {
     title: ev.title.trim(), description: ev.description, event_date: ev.eventDate,
     open_time: ev.open, start_time: ev.start, venue: ev.venue, address: ev.address,
     map_url: ev.mapUrl, ticket: ev.ticket, flyer_url: ev.flyer || null,
     notes: ev.notes.map((n) => n.trim()).filter(Boolean), contact_email: ev.email,
     theme_color: ev.theme.color, theme_font: ev.theme.font, published: Boolean(ev.published),
+    ...(slug ? { slug } : {}),
   };
   let id = ev.id;
   if (id) {
     const { error } = await supabase.from("events").update(row).eq("id", id);
-    if (error) throw error;
+    if (error) throw slugDup(error);
   } else {
     const { data, error } = await supabase.from("events")
-      .insert({ ...row, slug: `e-${Date.now().toString(36)}` }).select("id").single();
-    if (error) throw error;
+      .insert({ ...row, slug: slug || `e-${Date.now().toString(36)}` }).select("id").single();
+    if (error) throw slugDup(error);
     id = data.id;
   }
   const rows = bands.map((b, i) => ({
