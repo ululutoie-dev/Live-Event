@@ -5,7 +5,7 @@ const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0
 
 function Item({ e }) {
   return (
-    <a className="ev-item" href={`/e/${e.slug || e.id}`}>
+    <a className="ev-item" href={`#/e/${e.slug || e.id}`}>
       <span className="ev-date">{e.dateLabel}<small>{(e.eventDate || "").slice(0, 4)}</small></span>
       <span className="ev-body">
         <b className="ev-title">{e.title}</b>
@@ -38,7 +38,7 @@ export default function EventListPage({ events }) {
           {past.map((e) => <Item key={e.id} e={e} />)}
         </section>
       )}
-      <div className="footer"><a className="edit-link" href="/#/admin">編集</a></div>
+      <div className="footer"><a className="edit-link" href="#/admin">編集</a></div>
     </main>
   );
 }

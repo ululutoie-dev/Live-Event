@@ -4,9 +4,8 @@ import EventPage from "./EventPage";
 import EventListPage from "./EventListPage";
 
 // 公開側のルーティング
-// 公開URLは「/e/<slug または UUID>」。App.jsx が「#/e/<…>」の形に直してこのコンポーネントへ渡します
-// (旧形式の「#/e/…」「#/event/…」は App.jsx で「/e/…」に切り替えます)
-//   #/e/<slug または UUID> : そのイベントの詳細ページ
+//   #/e/<slug または UUID>     : そのイベントの詳細ページ(QRコード・告知ページのURLはこの形)
+//   #/event/<slug または UUID> : 従来のURL。同じ詳細ページ
 //   #/ (トップ)              : 公開中が2件以上なら一覧、1件ならそのイベントの詳細(今までのURLのまま見られます)
 export default function PublicPage({ hash }) {
   const [list, setList] = useState(null);

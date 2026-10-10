@@ -94,7 +94,7 @@ export function slugError(s) {
 }
 // 告知ページの公開URL(QRコードにも使用)。VITE_PUBLIC_URL を設定すればドメインを固定できます
 export const publicBase = () => (import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
-export const eventUrl = (e) => `${publicBase()}/e/${e.slug || e.id}`;
+export const eventUrl = (e) => `${publicBase()}/#/e/${e.slug || e.id}`;
 
 export async function saveEvent(ev, bands) {
   const slug = (ev.slug || "").trim();

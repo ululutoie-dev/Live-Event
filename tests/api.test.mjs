@@ -28,14 +28,13 @@ test("dateFields: 表示用の日付", () => {
   assert.deepEqual(api.dateFields(""), { dateLabel: "", weekday: "", date: "" });
 });
 
-test("eventUrl: ハッシュなしの /e/<slug> 形式。slugがなければid", () => {
-  assert.equal(api.eventUrl({ slug: "vol8", id: "x" }), "https://live-event-red.vercel.app/e/vol8");
-  assert.equal(api.eventUrl({ id: "b77f212d-28f9-4da7-bcf6-411095c4732c" }), "https://live-event-red.vercel.app/e/b77f212d-28f9-4da7-bcf6-411095c4732c");
-  assert.doesNotMatch(api.eventUrl({ slug: "vol8" }), /#/);
+test("eventUrl: 既存のURL形式 /#/e/<slug>。slugがなければid", () => {
+  assert.equal(api.eventUrl({ slug: "vol8", id: "x" }), "https://live-event-red.vercel.app/#/e/vol8");
+  assert.equal(api.eventUrl({ id: "b77f212d-28f9-4da7-bcf6-411095c4732c" }), "https://live-event-red.vercel.app/#/e/b77f212d-28f9-4da7-bcf6-411095c4732c");
 });
 
 test("publicBase: VITE_PUBLIC_URL があれば優先し、末尾の/は除く", () => {
   globalThis.__ENV = { VITE_PUBLIC_URL: "https://example.com/" };
-  assert.equal(api.eventUrl({ slug: "vol8" }), "https://example.com/e/vol8");
+  assert.equal(api.eventUrl({ slug: "vol8" }), "https://example.com/#/e/vol8");
   globalThis.__ENV = {};
 });

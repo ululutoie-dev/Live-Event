@@ -78,7 +78,7 @@ export default function Editor({ eventId, flash, onLogout, onSaved }) {
         <input className="in" value={ev.slug || ""} placeholder="例: vol8" autoCapitalize="none" autoCorrect="off" spellCheck="false"
           onChange={(e) => setEv({ ...ev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })} />
         <small style={{ display: "block", marginTop: 6, color: "var(--muted)", wordBreak: "break-all" }}>
-          告知ページ: {publicBase()}/e/{ev.slug || (ev.id ? "" : "(空欄なら自動で設定)")}
+          告知ページ: {publicBase()}/#/e/{ev.slug || (ev.id ? "" : "(空欄なら自動で設定)")}
         </small>
       </Field>
       <Field label="イベント説明"><textarea className="in" value={ev.description} onChange={set("description")} /></Field>
@@ -116,7 +116,7 @@ export default function Editor({ eventId, flash, onLogout, onSaved }) {
 
       {ev.id && (
         <div style={{ marginTop: 32 }}>
-          <a className="btn ghost" style={{ display: "block" }} href={`/e/${ev.slug || ev.id}`} target="_blank" rel="noopener noreferrer">告知ページを開く</a>
+          <a className="btn ghost" style={{ display: "block" }} href={`/#/e/${ev.slug || ev.id}`} target="_blank" rel="noopener noreferrer">告知ページを開く</a>
           <small style={{ display: "block", marginTop: 8, color: "var(--muted)" }}>
             {ev.published ? "保存済みの内容が表示されます。" : "非公開のため、公開するまでは表示されません。"}
           </small>

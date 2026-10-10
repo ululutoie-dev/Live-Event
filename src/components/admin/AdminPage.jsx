@@ -23,7 +23,7 @@ export default function AdminPage({ hash }) {
     return (
       <div className="adm">
         <p>Supabaseが未設定です。READMEの手順で環境変数を設定してください。</p>
-        <a className="adm-link" href="/">公開ページへ戻る</a>
+        <a className="adm-link" href="#/">公開ページへ戻る</a>
       </div>
     );
   }

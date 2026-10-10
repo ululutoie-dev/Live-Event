@@ -29,7 +29,7 @@ export default function AdminEventList({ onLogout }) {
           <div className="ev-row-act">
             <a className="btn sm" href={`#/admin/edit/${e.id}`}>編集</a>
             <div className="ev-row-links">
-              {e.published && <a className="adm-link" href={`/e/${e.slug || e.id}`}>告知ページ</a>}
+              {e.published && <a className="adm-link" href={`#/e/${e.slug || e.id}`}>告知ページ</a>}
               <button type="button" className="adm-link linkbtn" onClick={() => setQr(e)}>QRコード</button>
             </div>
           </div>

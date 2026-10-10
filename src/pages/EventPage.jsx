@@ -28,7 +28,7 @@ export default function EventPage({ idOrSlug, multiple }) {
   if (failed) return <p className="loading">読み込めませんでした。時間をおいて開き直してください。</p>;
   if (data === undefined) return <p className="loading"></p>;
   if (data === null) {
-    return <p className="loading">このイベントは見つかりませんでした。<br /><a className="adm-link" href="/">イベント一覧へ</a></p>;
+    return <p className="loading">このイベントは見つかりませんでした。<br /><a className="adm-link" href="#/">イベント一覧へ</a></p>;
   }
   const on = flyerOn ?? Boolean(ev.flyer);
   const flyer = showPicker ? (on ? ev.flyer || SAMPLE_FLYER : "") : ev.flyer;
@@ -40,8 +40,8 @@ export default function EventPage({ idOrSlug, multiple }) {
       <ContactButton title={ev.title} email={ev.email} />
       <div className="footer">
         {ev.title}
-        {multiple && <a className="edit-link" href="/">イベント一覧</a>}
-        <a className="edit-link" href="/#/admin">編集</a>
+        {multiple && <a className="edit-link" href="#/">イベント一覧</a>}
+        <a className="edit-link" href="#/admin">編集</a>
       </div>
       {showPicker && <ThemePicker {...{ color: c, setColor, font: f, setFont, flyerOn: on, setFlyerOn }} />}
     </main>
